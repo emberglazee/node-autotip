@@ -9,6 +9,7 @@ const jsonfile = require('jsonfile')
 const logger = require('./logger')
 
 const trackerObj = {
+    username: '',
     tips_sent: 0,
     tips_received: 0,
     exp: 0,
@@ -17,7 +18,7 @@ const trackerObj = {
 }
 
 /**
- * Creates a directory for a user's stats if it does not already exist.
+ * Creates a directory for a player's stats if it does not already exist.
  * @param {string} dirPath The path to the directory
  */
 async function createDirIfNotExist(dirPath) {
@@ -36,8 +37,8 @@ async function createDirIfNotExist(dirPath) {
 }
 
 /**
- * Gets the stats for a user from the JSON file.
- * @param {string} uuid The UUID of the user
+ * Gets the stats for a player from the JSON file.
+ * @param {string} uuid The UUID of the player
  * @returns {Promise<object>} The stats object
  */
 async function getStats(uuid) {
@@ -90,20 +91,22 @@ function updateStats(obj, data, tip) {
 
 /**
  * Increments the tip stats and saves them to the JSON file.
- * @param {string} uuid The UUID of the user
+ * @param {string} uuid The UUID of the player
+ * @param {string} username The username of the player
  * @param {object} type The type of tip
  * @param {string[]} data The data from the tip message
  */
-async function tipIncrement(uuid, type, data) {
+async function tipIncrement(uuid, username, type, data) {
     const oldStats = await getStats(uuid)
     const newStats = updateStats(oldStats, data, type)
+    newStats.username = username
     await jsonfile.writeFile(`./stats/${uuid}/tips.json`, newStats)
 }
 
 /**
- * Gets the number of tips sent by a user, which is needed to log in to the
+ * Gets the number of tips sent by a player, which is needed to log in to the
  * autotip server.
- * @param {string} uuid The UUID of the user
+ * @param {string} uuid The UUID of the player
  * @returns {Promise<number>} The number of tips sent
  */
 async function getTipCount(uuid) {
@@ -112,8 +115,8 @@ async function getTipCount(uuid) {
 }
 
 /**
- * Gets the lifetime stats for a user to display on login.
- * @param {string} uuid The UUID of the user
+ * Gets the lifetime stats for a player to display on login.
+ * @param {string} uuid The UUID of the player
  * @returns {Promise<object>} The lifetime stats object
  */
 async function getLifetimeStats(uuid) {

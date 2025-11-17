@@ -1,5 +1,7 @@
 <img src="https://repository-images.githubusercontent.com/124889265/21280080-7431-11e9-92d0-2a2eefcc1051" alt="node-autotip"/>
 
+# node-autotip v4.3.0
+
 A fork of [builder-247](https://github.com/builder-247)'s [node-autotip](https://github.com/builder-247/node-autotip) project, with updated packages and a refactored code base.
 
 ## About
@@ -20,7 +22,8 @@ node-autotip also fixes the issue of "That player is not online, try another use
 4. Create a credentials.json file following [this example](https://github.com/emberglazee/node-autotip/blob/master/credentials.example.json);
     * **OPTIONAL**: Create `.env` file with config values in KEY=VALUE format (see config.js for full listing of options).
         * In order to track karma gain accurately, update the `TIP_KARMA` value, it is 100 for default rank, 200 for VIP etc. capped at 500 for MVP+.
-5. `npm start` to start node-autotip.
+5. `npm start` to start node-autotip;
+6. `npm run stats` to display node-autotip statistics.
 
 ## Contributing
 

@@ -12,8 +12,70 @@ const { tipIncrement, getLifetimeStats } = require('./lib/tracker')
 const tipper = require('./lib/tipper')
 const { toANSI, sleep } = require('./util/utility')
 const credentials = require('../credentials.json')
+const jsonfile = require('jsonfile')
+const fs = require('fs').promises
+const path = require('path')
 
 logger.info('Starting...')
+
+async function showStats() {
+    logger.info('Displaying player statistics...')
+    const statsDir = './stats'
+    try {
+        const userDirs = await fs.readdir(statsDir).catch(err => {
+            if (err.code === 'ENOENT') return []
+            throw err
+        })
+
+        const userStatPromises = userDirs.map(async userDir => {
+            const statFile = path.join(statsDir, userDir, 'tips.json')
+            try {
+                // check if it's a directory before reading
+                const stats = await fs.stat(path.join(statsDir, userDir))
+                if (!stats.isDirectory()) return null
+
+                await fs.access(statFile)
+                return jsonfile.readFile(statFile)
+            } catch (e) {
+                return null // File doesn't exist, not a directory, or other error
+            }
+        })
+
+        const allStats = (await Promise.all(userStatPromises)).filter(s => s !== null)
+
+        if (allStats.length === 0) {
+            logger.info('No statistics found.')
+            return
+        }
+
+        console.log('') // for spacing
+        allStats.forEach(stats => {
+            const { username, tips_sent, tips_received, exp, karma, coins } = stats
+            const totalCoins = Object.values(coins || {}).reduce((a, b) => a + b, 0)
+
+            console.log(toANSI(`§e§lStats for ${username || 'Unknown User'}:`))
+            console.log(toANSI(`  §bTips Sent: §f${tips_sent || 0}`))
+            console.log(toANSI(`  §bTips Received: §f${tips_received || 0}`))
+            console.log(toANSI(`  §3Total Exp Earned: §f${exp || 0}`))
+            console.log(toANSI(`  §dTotal Karma Earned: §f${karma || 0}`))
+            console.log(toANSI(`  §6Total Coins Earned: §f${totalCoins || 0}`))
+            if (coins && Object.keys(coins).length > 0) {
+                console.log(toANSI('  §6Coins per game:'))
+                for (const [game, amount] of Object.entries(coins)) {
+                    console.log(toANSI(`    §7- ${game}: §f${amount}`))
+                }
+            }
+            console.log('') // for spacing
+        })
+
+    } catch (error) {
+        logger.error('An error occurred while reading statistics:', error)
+    }
+}
+
+if (process.argv.includes('--stats')) {
+    showStats().then(() => process.exit(0))
+}
 
 let bot, uuid, autotipSession
 
@@ -159,7 +221,7 @@ function onMessage(message, position) {
             ? (tips - 5) * config.TIP_KARMA
             : tips * config.TIP_KARMA
         arr.push(`§d+${karma} Karma`)
-        tipIncrement(uuid, { type: 'sent', amount: tips }, arr)
+        tipIncrement(uuid, credentials.username, { type: 'sent', amount: tips }, arr)
         logRewards(arr)
     }
 
@@ -167,7 +229,7 @@ function onMessage(message, position) {
         const arr = getHoverData(message)
         try {
             const tips = /by (\d*) players?/.exec(msg)[1]
-            tipIncrement(uuid, { type: 'received', amount: tips }, arr)
+            tipIncrement(uuid, credentials.username, { type: 'received', amount: tips }, arr)
         } catch (e) {
             //
         }

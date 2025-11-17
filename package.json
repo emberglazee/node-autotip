@@ -1,12 +1,15 @@
 {
   "name": "node-autotip",
-  "version": "4.2.0",
+  "version": "4.3.0",
   "description": "CLI-based autotip client for Hypixel using mineflayer.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
     "start:dev": "npm run dev",
     "start:bun": "bun src/index.js",
+
+    "stats": "node src/index.js --stats",
+    "stats:bun": "bun src/index.js --stats",
 
     "dev": "node src/index.js --dev",
     "dev:bun": "bun src/index.js --dev",
