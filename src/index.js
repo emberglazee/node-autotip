@@ -82,7 +82,8 @@ function chatLogger(message) {
         'That player is not online, try another user!',
         'No one has a network booster active right now! Try again later.',
         'You already tipped everyone that has boosters active, so there isn\'t anybody to be tipped right now!',
-        'You\'ve already tipped someone in the past hour in'
+        'You\'ve already tipped someone in the past hour in',
+        'You are AFK. Move around to return from AFK.'
     ]
     if (config.HIDE_TIP_MESSAGES) {
         if (blacklist.includes(str) || regex.test(str)) {
@@ -92,6 +93,12 @@ function chatLogger(message) {
     }
     if (config.HIDE_JOIN_MESSAGES) {
         if (/(^Friend|Guild) > [\w]+ (left|joined)\.$/.test(str)) {
+            logger.debug(ansi)
+            return
+        }
+    }
+    if (config.HIDE_MVP_JOIN_MESSAGES) {
+        if (/^\[MVP\++]\s\S+\sjoined the lobby!$/.test(str) || /^\s*>>> \[MVP\++]\s\S+\sjoined the lobby! <<<\s*$/.test(str)) {
             logger.debug(ansi)
             return
         }
