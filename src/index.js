@@ -1,13 +1,13 @@
 
 const mineflayer = require('mineflayer')
 const wait = require('util').promisify(setTimeout)
-const config = require('./config')
+const config = require('../config')
 const login = require('./lib/login')
 const logger = require('./lib/logger')
 const { tipIncrement, getLifetimeStats } = require('./lib/tracker')
 const tipper = require('./lib/tipper')
 const util = require('./util/utility')
-const credentials = require('./credentials.json')
+const credentials = require('../credentials.json')
 
 let bot, uuid, autotipSession
 
@@ -79,23 +79,19 @@ function chatLogger(message) {
     logger.game(ansi)
 }
 
-function onLogin() {
+async function onLogin() {
     uuid = getUUID(bot)
     setLang()
     logger.debug(`Logged on ${options.host}:${options.port}`)
     getLifetimeStats(uuid, stats => {
         logger.info(util.toANSI(stats))
     })
-    setTimeout(() => {
-        const { session } = bot._client
-        if (autotipSession === undefined) {
-            login(uuid, session, aSession => {
-                autotipSession = aSession
-                return tipper.initTipper(bot, autotipSession)
-            })
-        }
-        tipper.initTipper(bot, autotipSession)
-    }, 1000)
+    await wait(1000)
+    const { session } = bot._client
+    if (autotipSession === undefined) {
+        autotipSession = await login(uuid, session)
+    }
+    tipper.initTipper(bot, autotipSession)
 }
 
 function onMessage(message, position) {
@@ -151,10 +147,9 @@ async function gracefulShutdown() {
     await wait(1000)
 
     try {
-        autotipSession.logOut(() => {
-            logger.info('Closed out remaining connections.')
-            process.exit()
-        })
+        await autotipSession.logOut()
+        logger.info('Closed out remaining connections.')
+        process.exit()
     } catch (e) {
         logger.warn('Closing without establishing autotip session.')
         process.exit()

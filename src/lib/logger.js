@@ -1,7 +1,7 @@
 const {
     addColors, createLogger, format, transports
 } = require('winston')
-const config = require('../config')
+const config = require('../../config')
 const util = require('../util/utility')
 
 const levels = {
