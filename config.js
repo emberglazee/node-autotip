@@ -17,5 +17,8 @@ const defaults = {
 Object.keys(defaults).forEach(key => {
     process.env[key] = (key in process.env) ? process.env[key] : defaults[key]
 })
+
+if (process.argv.includes('--dev')) process.env.NODE_ENV = 'development'
+
 // now processes can use either process.env or config
 module.exports = process.env
