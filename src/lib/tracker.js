@@ -4,9 +4,9 @@
  * earned. This data is persisted to a JSON file.
  * @module lib/tracker
  */
-const fs = require('fs').promises
-const jsonfile = require('jsonfile')
-const logger = require('./logger')
+import fs from 'fs/promises'
+import jsonfile from 'jsonfile'
+import logger from './logger.js'
 
 const trackerObj = {
     username: '',
@@ -96,7 +96,7 @@ function updateStats(obj, data, tip) {
  * @param {object} type The type of tip
  * @param {string[]} data The data from the tip message
  */
-async function tipIncrement(uuid, username, type, data) {
+export async function tipIncrement(uuid, username, type, data) {
     const oldStats = await getStats(uuid)
     const newStats = updateStats(oldStats, data, type)
     newStats.username = username
@@ -109,7 +109,7 @@ async function tipIncrement(uuid, username, type, data) {
  * @param {string} uuid The UUID of the player
  * @returns {Promise<number>} The number of tips sent
  */
-async function getTipCount(uuid) {
+export async function getTipCount(uuid) {
     const stats = await getStats(uuid)
     return stats.tips_sent
 }
@@ -119,16 +119,10 @@ async function getTipCount(uuid) {
  * @param {string} uuid The UUID of the player
  * @returns {Promise<object>} The lifetime stats object
  */
-async function getLifetimeStats(uuid) {
+export async function getLifetimeStats(uuid) {
     const obj = await getStats(uuid)
     const xp = obj.exp ?? 0
     const karma = obj.karma ?? 0
     const coins = Object.values(obj.coins || {}).reduce((a, b) => a + b, 0)
     return { xp, karma, coins }
-}
-
-module.exports = {
-    tipIncrement,
-    getTipCount,
-    getLifetimeStats
 }

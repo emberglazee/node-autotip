@@ -1,7 +1,6 @@
-const { defineConfig } = require('eslint/config')
-const stylistic = require('@stylistic/eslint-plugin')
+import stylistic from '@stylistic/eslint-plugin'
 
-module.exports = defineConfig([
+export default [
     {
         rules: {
             'no-trailing-spaces': 'error',
@@ -37,4 +36,4 @@ module.exports = defineConfig([
             '@stylistic': stylistic
         }
     }
-])
+]

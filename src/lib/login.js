@@ -4,14 +4,14 @@
  * server, and then it uses the resulting session to log in to the autotip server.
  * @module lib/login
  */
-const axios = require('axios')
-const os = require('os')
-const bigInt = require('big-integer')
-const { removeDashes, packageVersion } = require('../util/utility')
-const logger = require('./logger')
-const createHash = require('../util/createHash')
-const Session = require('./session')
-const { getTipCount } = require('./tracker')
+import axios from 'axios'
+import os from 'os'
+import bigInt from 'big-integer'
+import { removeDashes, packageVersion } from '../util/utility.js'
+import logger from './logger.js'
+import createHash from '../util/createHash.js'
+import Session from './session.js'
+import { getTipCount } from './tracker.js'
 
 const headers = {
     'User-Agent': `@emberglazee/node-autotip@${packageVersion}`
@@ -109,4 +109,4 @@ async function login(uuid, session) {
     return new Session(json)
 }
 
-module.exports = login
+export default login

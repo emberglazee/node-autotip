@@ -3,9 +3,11 @@
  * @module lib/logger
  */
 
-const { addColors, createLogger, format, transports } = require('winston')
-const { NODE_ENV } = require('../../config')
-const { removeANSIFormatting } = require('../util/utility')
+import { addColors, createLogger, format, transports } from 'winston'
+import config from '../../config.js'
+import { removeANSIFormatting } from '../util/utility.js'
+
+const { NODE_ENV } = config
 
 const levels = {
     levels: {
@@ -51,4 +53,4 @@ if (NODE_ENV === 'development') {
     logger.add(new transports.File({ filename: 'logs/debug.log' }))
 }
 
-module.exports = logger
+export default logger

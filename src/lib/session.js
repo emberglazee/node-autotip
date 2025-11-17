@@ -1,7 +1,7 @@
-const { packageVersion } = require('../util/utility')
-const logger = require('./logger')
-const tipper = require('./tipper')
-const axios = require('axios')
+import { packageVersion } from '../util/utility.js'
+import logger from './logger.js'
+import tipper from './tipper.js'
+import axios from 'axios'
 
 const headers = {
     'User-Agent': `@emberglazee/node-autotip@${packageVersion}`
@@ -78,4 +78,4 @@ class Session {
     }
 }
 
-module.exports = Session
+export default Session

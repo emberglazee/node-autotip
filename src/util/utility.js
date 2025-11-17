@@ -1,10 +1,13 @@
+import { promisify } from 'util'
+import packageJson from '../../package.json' with { type: 'json' }
+
 /**
  * Get a random integer between two values
  * @param {number} min The minimum value
  * @param {number} max The maximum value
  * @returns {number} A random integer
  */
-function getRndInteger(min, max) {
+export function getRndInteger(min, max) {
     return Math.floor(Math.random() * ((max - min) + 1)) + min
 }
 
@@ -13,7 +16,7 @@ function getRndInteger(min, max) {
  * @param {string} string The string to remove dashes from
  * @returns {string} The string without dashes
  */
-function removeDashes(string) {
+export function removeDashes(string) {
     return string.replace(/-/g, '')
 }
 
@@ -22,7 +25,7 @@ function removeDashes(string) {
  * @param {string} [src=''] The string to convert
  * @returns {string} The converted string
  */
-function toANSI(src = '') {
+export function toANSI(src = '') {
     const codes = {
         '§0': '\u001b[30m',
         '§1': '\u001b[34m',
@@ -51,7 +54,7 @@ function toANSI(src = '') {
     Object.keys(codes).forEach(k => {
         message = message.replace(new RegExp(k, 'g'), codes[k])
     })
-    return message
+    return `${message}\u001b[0m`
 }
 
 /**
@@ -59,19 +62,10 @@ function toANSI(src = '') {
  * @param {string} string The string to remove ANSI formatting from
  * @returns {string} The string without ANSI formatting
  */
-function removeANSIFormatting(string) {
+export function removeANSIFormatting(string) {
     return string.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
 }
 
-const sleep = require('util').promisify(setTimeout)
+export const sleep = promisify(setTimeout)
 
-const packageVersion = require('../../package.json').version
-
-module.exports = {
-    getRndInteger,
-    removeDashes,
-    toANSI,
-    removeANSIFormatting,
-    sleep,
-    packageVersion
-}
+export const packageVersion = packageJson.version

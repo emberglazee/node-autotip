@@ -5,7 +5,7 @@
  * queue to be retried later.
  * @module lib/tipper
  */
-const logger = require('./logger')
+import logger from './logger.js'
 
 let tipQueue = [], failQueue = []
 let lastGame, session, bot
@@ -95,7 +95,7 @@ function initTipper(_bot, autotipSession) {
     session.sendTipRequest()
 }
 
-module.exports = {
+export default {
     updateQueue,
     tipFailed,
     initTipper

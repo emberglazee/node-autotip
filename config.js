@@ -1,5 +1,5 @@
-const dotenv = require('dotenv')
-const fs = require('fs')
+import dotenv from 'dotenv'
+import fs from 'fs'
 
 if (fs.existsSync('.env')) dotenv.config()
 
@@ -26,4 +26,4 @@ Object.keys(defaults).forEach(key => {
 if (process.argv.includes('--dev')) process.env.NODE_ENV = 'development'
 
 // now processes can use either process.env or config
-module.exports = process.env
+export default process.env

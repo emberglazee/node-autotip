@@ -1,4 +1,4 @@
-const { createHash } = require('crypto')
+import { createHash } from 'crypto'
 
 /**
  * The Minecraft session server uses a custom hex digest format that includes
@@ -45,4 +45,4 @@ function mcHexDigest(str) {
     return digest
 }
 
-module.exports = str => mcHexDigest(str)
+export default str => mcHexDigest(str)

@@ -4,19 +4,25 @@
  * Mineflayer bot, connects to the server, and handles chat messages.
  * @module index
  */
-const mineflayer = require('mineflayer')
-const config = require('../config')
-const login = require('./lib/login')
-const logger = require('./lib/logger')
-const { tipIncrement, getLifetimeStats } = require('./lib/tracker')
-const tipper = require('./lib/tipper')
-const { toANSI, sleep } = require('./util/utility')
-const credentials = require('../credentials.json')
-const jsonfile = require('jsonfile')
-const fs = require('fs').promises
-const path = require('path')
+import mineflayer from 'mineflayer'
+import config from '../config.js'
+import login from './lib/login.js'
+import logger from './lib/logger.js'
+import { tipIncrement, getLifetimeStats } from './lib/tracker.js'
+import tipper from './lib/tipper.js'
+import { toANSI, sleep } from './util/utility.js'
+import credentials from '../credentials.json' with { type: 'json' }
+import jsonfile from 'jsonfile'
+import fs from 'fs/promises'
+import path from 'path'
 
 logger.info('Starting...')
+// Check for a Bun version first, since it fakes a Node.js version
+if (process.versions.bun) {
+    logger.info(`Detected Bun v${process.versions.bun}`)
+} else if (process.versions.node) {
+    logger.info(`Running Node.js v${process.versions.node}`)
+}
 
 async function showStats() {
     logger.info('Displaying player statistics...')
