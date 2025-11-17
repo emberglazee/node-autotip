@@ -1,1 +1,1 @@
-Stats are stored here in directory named after account uuid
+Per-player tipping statistics are stored here.

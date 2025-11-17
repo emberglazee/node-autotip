@@ -1,7 +1,7 @@
 {
   "name": "node-autotip",
-  "version": "3.1.0",
-  "description": "",
+  "version": "3.2.0",
+  "description": "CLI-based autotip client for Hypixel using mineflayer.",
   "main": "index.js",
   "scripts": {
     "start": "node index",
@@ -9,24 +9,22 @@
     "lint": "eslint . --ext .js,.jsx --fix",
     "lintnofix": "eslint . --ext .js,.jsx"
   },
-  "author": "builder_247",
+  "author": "emberglazee",
   "license": "MIT",
   "dependencies": {
-    "big-integer": "^1.6.43",
-    "dotenv": "^8.0.0",
-    "jsonfile": "^5.0.0",
-    "mineflayer": "^3.11.2",
-    "request": "^2.88.0",
-    "winston": "^3.2.1"
+    "big-integer": "^1.6.52",
+    "dotenv": "^17.2.3",
+    "jsonfile": "^6.2.0",
+    "mineflayer": "^4.33.0",
+    "request": "^2.88.2",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
-    "eslint": "^8.5.0",
-    "eslint-config-airbnb": "^19.0.2",
-    "eslint-plugin-import": "^2.17.2",
-    "eslint-plugin-jsx-a11y": "^6.2.1",
-    "eslint-plugin-react": "^7.12.4"
+    "@stylistic/eslint-plugin": "^5.5.0",
+    "@eslint/js": "^9.37.0",
+    "eslint": "^9.39.1"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   }
 }
