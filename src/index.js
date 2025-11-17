@@ -5,14 +5,15 @@
  * @module index
  */
 const mineflayer = require('mineflayer')
-const wait = require('util').promisify(setTimeout)
 const config = require('../config')
 const login = require('./lib/login')
 const logger = require('./lib/logger')
 const { tipIncrement, getLifetimeStats } = require('./lib/tracker')
 const tipper = require('./lib/tipper')
-const util = require('./util/utility')
+const { toANSI, sleep } = require('./util/utility')
 const credentials = require('../credentials.json')
+
+logger.info('Starting...')
 
 let bot, uuid, autotipSession
 
@@ -34,7 +35,7 @@ function getUUID() {
 }
 
 /**
- * Sets the language of the bot.
+ * Sets the language of the bot by sending the `/lang {language}` command.
  * @param {string} [language='english'] The language to set
  */
 function setLang(language = 'english') {
@@ -61,7 +62,7 @@ function getHoverData(message) {
 function logRewards(arr = []) {
     if (config.PRINT_REWARDS) {
         arr.forEach(line => {
-            logger.game(util.toANSI(`${line}§r`))
+            logger.game(toANSI(`${line}§r`))
         })
     }
 }
@@ -117,10 +118,13 @@ async function onLogin() {
     uuid = getUUID(bot)
     setLang()
     logger.debug(`Logged on ${options.host}:${options.port}`)
+
     const { xp, coins, karma } = await getLifetimeStats(uuid)
     const stats = `You've earned §3${xp} Exp§r, §6${coins} Coins§r and §d${karma} Karma§r using §bnode-autotip§r`
-    logger.info(util.toANSI(stats))
-    await wait(1000)
+
+    logger.info(toANSI(stats))
+    await sleep(1000)
+
     const { session } = bot._client
     if (autotipSession === undefined) {
         autotipSession = await login(uuid, session)
@@ -138,6 +142,7 @@ function onMessage(message, position) {
     if (position !== 'chat') return
     const msg = message.toString()
     chatLogger(message)
+
     if (msg.startsWith('You tipped')) {
         const arr = getHoverData(message)
         const tips = (/tipped \w* players in (\d*)/.exec(msg) !== null)
@@ -150,6 +155,7 @@ function onMessage(message, position) {
         tipIncrement(uuid, { type: 'sent', amount: tips }, arr)
         logRewards(arr)
     }
+
     if (msg.startsWith('You were tipped')) {
         const arr = getHoverData(message)
         try {
@@ -160,6 +166,7 @@ function onMessage(message, position) {
         }
         logRewards(arr)
     }
+
     if (msg.startsWith('That player is not online, try another user!')
     || msg.startsWith('You\'ve already tipped that person today')
     || msg.startsWith('Can\'t find a player by the name of')) {
@@ -172,6 +179,8 @@ function onMessage(message, position) {
  */
 (function init() {
     bot = mineflayer.createBot(options)
+    logger.info('Logging in...')
+
     bot._client.once('session', session => options.session = session)
     bot.once('login', onLogin)
     bot.on('message', onMessage)
@@ -188,11 +197,13 @@ function onMessage(message, position) {
  */
 async function gracefulShutdown() {
     logger.info('Received kill signal, shutting down gracefully.')
+
     // Change language to a preferred one. Need to leave limbo first to run the command.
     bot.chat('/hub')
-    await wait(1000)
+    await sleep(1000)
+
     setLang(config.CHANGE_LANGUAGE)
-    await wait(1000)
+    await sleep(1000)
 
     setTimeout(() => {
         logger.error('Could not close connections in time, forcefully shutting down')

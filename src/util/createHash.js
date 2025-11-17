@@ -7,10 +7,8 @@ const crypto = require('crypto')
  * @param {Buffer} buffer The buffer to perform two's compliment on
  */
 function performTwosCompliment(buffer) {
-    let carry = true
-    let i
-    let newByte
-    let value
+    let i, newByte, value, carry = true
+
     for (i = buffer.length - 1; i >= 0; i -= 1) {
         value = buffer.readUInt8(i)
         newByte = ~value & 0xff
@@ -30,10 +28,12 @@ function performTwosCompliment(buffer) {
  */
 function mcHexDigest(str) {
     const hash = Buffer.from(crypto.createHash('sha1').update(str).digest(), 'binary')
+
     // check for negative hashes
     const negative = hash.readInt8(0) < 0
     if (negative) performTwosCompliment(hash)
     let digest = hash.toString('hex')
+
     // trim leading zeroes
     digest = digest.replace(/^0+/g, '')
     if (negative) digest = `-${digest}`

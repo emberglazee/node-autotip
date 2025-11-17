@@ -63,11 +63,13 @@ function updateStats(obj, data, tip) {
     const xpRegex = /\+([\d]*) Hypixel Experience/
     const karmaRegex = /\+([\d]*) Karma/
     const coinRegex = /\+([\d]*) ([\w\s]+) Coins/
+
     if (tip.type === 'sent') {
         stats.tips_sent += Number(tip.amount)
     } else {
         stats.tips_received += Number(tip.amount)
     }
+
     data.forEach(entry => {
         switch (true) {
             case xpRegex.test(entry):
@@ -116,8 +118,8 @@ async function getTipCount(uuid) {
  */
 async function getLifetimeStats(uuid) {
     const obj = await getStats(uuid)
-    const xp = obj.exp || 0
-    const karma = obj.karma || 0
+    const xp = obj.exp ?? 0
+    const karma = obj.karma ?? 0
     const coins = Object.values(obj.coins || {}).reduce((a, b) => a + b, 0)
     return { xp, karma, coins }
 }

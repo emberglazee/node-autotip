@@ -1,10 +1,10 @@
-const packageJson = require('../../package.json')
+const { packageVersion } = require('../util/utility')
 const logger = require('./logger')
 const tipper = require('./tipper')
 const axios = require('axios')
 
 const headers = {
-    'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
+    'User-Agent': `@emberglazee/node-autotip@${packageVersion}`
 }
 
 /**
@@ -52,6 +52,7 @@ class Session {
         try {
             const res = await axios.get(`https://autotip.sk1er.club/tip?key=${key}`, { headers })
             const JSONbody = res.data
+
             if (JSONbody.success) {
                 const queue = (games.length > 0
                     ? JSONbody.tips.filter(tip => games.includes(tip.gamemode))

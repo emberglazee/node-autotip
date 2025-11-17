@@ -7,11 +7,8 @@
  */
 const logger = require('./logger')
 
-let tipQueue = []
-let failQueue = []
-let lastGame
-let session
-let bot
+let tipQueue = [], failQueue = []
+let lastGame, session, bot
 let tippingInProgress = false
 
 /**
@@ -57,8 +54,10 @@ function tip() {
             checkFailedTips()
             return
         }
+
         const newTip = tipQueue.shift()
         lastGame = newTip.gamemode
+
         const command = getCommand(newTip)
         logger.debug(command)
         bot.chat(command)

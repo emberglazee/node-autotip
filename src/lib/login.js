@@ -8,14 +8,14 @@ const axios = require('axios')
 const os = require('os')
 const bigInt = require('big-integer')
 const packageJson = require('../../package.json')
-const util = require('../util/utility')
+const { removeDashes, packageVersion } = require('../util/utility')
 const logger = require('./logger')
 const createHash = require('../util/createHash')
 const Session = require('./session')
 const { getTipCount } = require('./tracker')
 
 const headers = {
-    'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
+    'User-Agent': `@emberglazee/node-autotip@${packageVersion}`
 }
 
 /**
@@ -64,7 +64,7 @@ async function joinServer(params) {
  */
 async function autotipLogin(uuid, session, hash) {
     const tipCount = await getTipCount(uuid)
-    const url = `https://autotip.sk1er.club/login?username=${session.selectedProfile.name}&uuid=${util.removeDashes(uuid)}&tips=${tipCount + 1}&v=2.1.0.6&mc=1.8.9&os=${os.type()}&hash=${hash}`
+    const url = `https://autotip.sk1er.club/login?username=${session.selectedProfile.name}&uuid=${removeDashes(uuid)}&tips=${tipCount + 1}&v=2.1.0.6&mc=1.8.9&os=${os.type()}&hash=${hash}`
     try {
         const res = await axios.get(url, { headers })
         return res.data
@@ -83,14 +83,14 @@ async function autotipLogin(uuid, session, hash) {
  */
 async function login(uuid, session) {
     const { accessToken } = session
-    logger.debug(`Trying to log in as ${util.removeDashes(uuid)}`)
+    logger.debug(`Trying to log in as ${removeDashes(uuid)}`)
 
-    const hash = getServerHash(util.removeDashes(uuid))
+    const hash = getServerHash(removeDashes(uuid))
     logger.debug(`Server hash is: ${hash}`)
 
     await joinServer({
         accessToken,
-        selectedProfile: util.removeDashes(uuid),
+        selectedProfile: removeDashes(uuid),
         serverId: hash
     })
     logger.debug('Successfully created Mojang session!')
