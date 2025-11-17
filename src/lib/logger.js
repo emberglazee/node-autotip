@@ -3,11 +3,9 @@
  * @module lib/logger
  */
 
-const {
-    addColors, createLogger, format, transports
-} = require('winston')
-const config = require('../../config')
-const util = require('../util/utility')
+const { addColors, createLogger, format, transports } = require('winston')
+const { NODE_ENV } = require('../../config')
+const { removeANSIFormatting } = require('../util/utility')
 
 const levels = {
     levels: {
@@ -31,7 +29,7 @@ const logger = createLogger({
     format: format.combine(
         format.json(),
         format.timestamp(),
-        format.printf(info => `${info.timestamp} ${info.level}: ${util.removeANSIFormatting(info.message)}`)
+        format.printf(info => `${info.timestamp} ${info.level}: ${removeANSIFormatting(info.message)}`)
     ),
     transports: [
         new transports.File({ filename: 'logs/error.log', level: 'error' }),
@@ -48,7 +46,7 @@ logger.add(new transports.Console({
     )
 }))
 
-if (config.NODE_ENV === 'development') {
+if (NODE_ENV === 'development') {
     logger.level = 'debug'
     logger.add(new transports.File({ filename: 'logs/debug.log' }))
 }

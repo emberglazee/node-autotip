@@ -1,4 +1,4 @@
-const crypto = require('crypto')
+const { createHash } = require('crypto')
 
 /**
  * The Minecraft session server uses a custom hex digest format that includes
@@ -27,7 +27,12 @@ function performTwosCompliment(buffer) {
  * @returns {string} The hex digest
  */
 function mcHexDigest(str) {
-    const hash = Buffer.from(crypto.createHash('sha1').update(str).digest(), 'binary')
+    const hash = Buffer.from(
+        createHash('sha1')
+            .update(str)
+            .digest(),
+        'binary'
+    )
 
     // check for negative hashes
     const negative = hash.readInt8(0) < 0

@@ -112,6 +112,7 @@ function setLang(language = 'english') {
  * @returns {string[]} The hover data
  */
 function getHoverData(message) {
+    /** @type {string[]} */
     const arr = message.hoverEvent.value.text.split('\n')
     arr.shift()
     return arr
@@ -254,7 +255,7 @@ function onMessage(message, position) {
     bot.once('login', onLogin)
     bot.on('message', onMessage)
     bot.on('kicked', reason => {
-        logger.info(`Kicked for ${reason}`)
+        logger.info(`Kicked! ${reason}`)
     })
     bot.once('end', () => setTimeout(init, 10000))
 }())

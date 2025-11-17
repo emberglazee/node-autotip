@@ -7,7 +7,6 @@
 const axios = require('axios')
 const os = require('os')
 const bigInt = require('big-integer')
-const packageJson = require('../../package.json')
 const { removeDashes, packageVersion } = require('../util/utility')
 const logger = require('./logger')
 const createHash = require('../util/createHash')
