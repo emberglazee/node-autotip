@@ -5,6 +5,7 @@ let failQueue = []
 let lastGame
 let session
 let bot
+let tippingInProgress = false
 
 function getCommand(newTip) {
     if (newTip.gamemode !== 'all') {
@@ -14,28 +15,36 @@ function getCommand(newTip) {
 }
 
 function checkFailedTips() {
-    setTimeout(() => {
-        if (tipQueue.length === 0 && failQueue.length > 0) {
-            logger.debug(`Found failed tips in ${failQueue}, requesting new players...`)
-            session.sendTipRequest(failQueue)
-            failQueue = []
-        }
-    }, 2 * 1000)
+    if (tipQueue.length === 0 && failQueue.length > 0) {
+        logger.debug(`Found failed tips in ${failQueue}, requesting new players...`)
+        session.sendTipRequest(failQueue)
+        failQueue = []
+    }
 }
 
 function tip() {
-    if (tipQueue.length > 0) {
-        tipQueue.forEach((newTip, i) => {
-            setTimeout(() => {
-                lastGame = newTip.gamemode
-                const command = getCommand(newTip)
-                logger.debug(command)
-                bot.chat(command)
-                tipQueue.shift()
-                checkFailedTips()
-            }, (i + 1) * session.tipCycleRate * 1000)
-        })
+    if (tippingInProgress) return
+    if (tipQueue.length === 0) {
+        checkFailedTips()
+        return
     }
+
+    tippingInProgress = true
+
+    function doTip() {
+        if (tipQueue.length === 0) {
+            tippingInProgress = false
+            checkFailedTips()
+            return
+        }
+        const newTip = tipQueue.shift()
+        lastGame = newTip.gamemode
+        const command = getCommand(newTip)
+        logger.debug(command)
+        bot.chat(command)
+        setTimeout(doTip, session.tipCycleRate * 1000)
+    }
+    doTip()
 }
 
 function updateQueue(tips) {
@@ -50,6 +59,7 @@ function tipFailed() {
 function initTipper(_bot, autotipSession) {
     session = autotipSession
     bot = _bot
+    session.sendTipRequest()
 }
 
 module.exports = {

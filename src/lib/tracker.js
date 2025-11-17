@@ -1,7 +1,7 @@
 /*
 * Functions for tracking statistics
  */
-const fs = require('fs')
+const fs = require('fs').promises
 const jsonfile = require('jsonfile')
 const logger = require('./logger')
 
@@ -13,26 +13,34 @@ const trackerObj = {
     coins: {}
 }
 
-function createDirIfNotExist(dirPath) {
-    if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true })
+async function createDirIfNotExist(dirPath) {
+    try {
+        await fs.access(dirPath)
+    } catch (e) {
+        await fs.mkdir(dirPath, { recursive: true })
     }
-    if (!fs.existsSync(`${dirPath}/tips.json`)) {
-        jsonfile.writeFileSync(`${dirPath}/tips.json`, trackerObj)
+
+    const statsPath = `${dirPath}/tips.json`
+    try {
+        await fs.access(statsPath)
+    } catch (e) {
+        await jsonfile.writeFile(statsPath, trackerObj)
     }
 }
 
-function getStats(uuid, cb) {
+async function getStats(uuid) {
     const path = `./stats/${uuid}/tips.json`
-    createDirIfNotExist(`./stats/${uuid}`)
-    jsonfile.readFile(path, (err, obj) => {
-        if (err) logger.error(err)
-        cb(obj)
-    })
+    await createDirIfNotExist(`./stats/${uuid}`)
+    try {
+        return await jsonfile.readFile(path)
+    } catch (err) {
+        logger.error(err)
+        return trackerObj // Return default object on error
+    }
 }
 
 function updateStats(obj, data, tip) {
-    const stats = obj
+    const stats = { ...obj }
     const xpRegex = /\+([\d]*) Hypixel Experience/
     const karmaRegex = /\+([\d]*) Karma/
     const coinRegex = /\+([\d]*) ([\w\s]+) Coins/
@@ -42,7 +50,6 @@ function updateStats(obj, data, tip) {
         stats.tips_received += Number(tip.amount)
     }
     data.forEach(entry => {
-
         switch (true) {
             case xpRegex.test(entry):
                 stats.exp += Number(xpRegex.exec(entry)[1])
@@ -52,40 +59,31 @@ function updateStats(obj, data, tip) {
                 break
             case coinRegex.test(entry): {
                 const [, coins, game] = coinRegex.exec(entry)
-                stats.coins[game] = (typeof stats.coins[game] === 'number')
-                    ? stats.coins[game] + Number(coins)
-                    : Number(coins)
+                stats.coins[game] = (stats.coins[game] || 0) + Number(coins)
                 break
             }
         }
     })
-    // logger.debug(JSON.stringify(stats));
     return stats
 }
 
-function tipIncrement(uuid, type, data) {
-    getStats(uuid, obj => {
-        const stats = updateStats(obj, data, type)
-        jsonfile.writeFileSync(`./stats/${uuid}/tips.json`, stats)
-    })
+async function tipIncrement(uuid, type, data) {
+    const oldStats = await getStats(uuid)
+    const newStats = updateStats(oldStats, data, type)
+    await jsonfile.writeFile(`./stats/${uuid}/tips.json`, newStats)
 }
 
-function getTipCount(uuid, cb) {
-    getStats(uuid, stats => {
-        cb(stats.tips_sent)
-    })
+async function getTipCount(uuid) {
+    const stats = await getStats(uuid)
+    return stats.tips_sent
 }
 
-function getLifetimeStats(uuid, cb) {
-    getStats(uuid, obj => {
-        const xp = obj.exp || 0
-        const karma = obj.karma || 0
-        let coins = 0
-        Object.keys(obj.coins || {}).forEach(game => {
-            coins += obj.coins[game]
-        })
-        return cb(`You've earned §3${xp} Exp§r, §6${coins} Coins§r and §d${karma} Karma§r using §bnode-autotip§r`)
-    })
+async function getLifetimeStats(uuid) {
+    const obj = await getStats(uuid)
+    const xp = obj.exp || 0
+    const karma = obj.karma || 0
+    const coins = Object.values(obj.coins || {}).reduce((a, b) => a + b, 0)
+    return { xp, karma, coins }
 }
 
 module.exports = {

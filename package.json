@@ -1,11 +1,15 @@
 {
   "name": "node-autotip",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "description": "CLI-based autotip client for Hypixel using mineflayer.",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
+    "start:bun": "bun src/index.js",
+
     "dev": "node src/index.js --dev",
+    "dev:bun": "bun src/index.js --dev",
+
     "lint": "eslint . --ext .js,.jsx",
     "lint:fix": "eslint . --ext .js,.jsx --fix"
   },
@@ -25,7 +29,8 @@
     "eslint": "^9.39.1"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=18",
+    "bun": ">=1"
   },
   "overrides": {
     "axios": "^1.13.2"

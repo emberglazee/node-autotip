@@ -4,7 +4,7 @@ const tipper = require('./tipper')
 const axios = require('axios')
 
 const headers = {
-    'User-Agent': `node-autotip@${packageJson.version}`
+    'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
 }
 
 class Session {
@@ -16,7 +16,6 @@ class Session {
         this.tipWaveRate = obj.tipWaveRate
         this.tipCycleRate = obj.tipCycleRate
 
-        this.sendTipRequest()
         this.keepAlive = setInterval(() => this.sendKeepAlive(), this.keepAliveRate * 1000)
         this.tipWave = setInterval(() => this.sendTipRequest(), this.tipWaveRate * 1000)
     }

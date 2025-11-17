@@ -14,6 +14,7 @@ node-autotip also fixes the issue of "That player is not online, try another use
 ## Getting started
 
 1. Install [Node.js](https://nodejs.org/en/), atleast v18, but >=v22 is recommended;
+    * Also tested to be working with [Bun](https://bun.sh/), you may chose it over Node.js if you wish.
 2. Clone or download the project;
 3. Run `npm install` command in the project directory;
 4. Create a credentials.json file following [this example](https://github.com/emberglazee/node-autotip/blob/master/credentials.example.json);

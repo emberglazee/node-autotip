@@ -5,7 +5,7 @@ const packageJson = require('../../package.json')
 const util = require('../util/utility')
 const logger = require('./logger')
 const createHash = require('../util/createHash')
-const Session =require('./session')
+const Session = require('./session')
 const { getTipCount } = require('./tracker')
 
 const headers = {
@@ -40,11 +40,11 @@ async function joinServer(params) {
 }
 
 async function autotipLogin(uuid, session, hash) {
-    const tipCount = await new Promise(resolve => getTipCount(uuid, resolve));
-    const url = `https://autotip.sk1er.club/login?username=${session.selectedProfile.name}&uuid=${util.removeDashes(uuid)}&tips=${tipCount + 1}&v=2.1.0.6&mc=1.8.9&os=${os.type()}&hash=${hash}`;
+    const tipCount = await getTipCount(uuid)
+    const url = `https://autotip.sk1er.club/login?username=${session.selectedProfile.name}&uuid=${util.removeDashes(uuid)}&tips=${tipCount + 1}&v=2.1.0.6&mc=1.8.9&os=${os.type()}&hash=${hash}`
     try {
-        const res = await axios.get(url, { headers });
-        return res.data;
+        const res = await axios.get(url, { headers })
+        return res.data
     } catch (err) {
         logger.error(`Unable to login to autotip: ${err}`)
         throw err

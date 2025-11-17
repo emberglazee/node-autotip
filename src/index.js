@@ -83,9 +83,9 @@ async function onLogin() {
     uuid = getUUID(bot)
     setLang()
     logger.debug(`Logged on ${options.host}:${options.port}`)
-    getLifetimeStats(uuid, stats => {
-        logger.info(util.toANSI(stats))
-    })
+    const { xp, coins, karma } = await getLifetimeStats(uuid)
+    const stats = `You've earned §3${xp} Exp§r, §6${coins} Coins§r and §d${karma} Karma§r using §bnode-autotip§r`
+    logger.info(util.toANSI(stats))
     await wait(1000)
     const { session } = bot._client
     if (autotipSession === undefined) {
@@ -146,6 +146,11 @@ async function gracefulShutdown() {
     setLang(config.CHANGE_LANGUAGE)
     await wait(1000)
 
+    setTimeout(() => {
+        logger.error('Could not close connections in time, forcefully shutting down')
+        process.exit()
+    }, 10 * 1000)
+
     try {
         await autotipSession.logOut()
         logger.info('Closed out remaining connections.')
@@ -154,12 +159,6 @@ async function gracefulShutdown() {
         logger.warn('Closing without establishing autotip session.')
         process.exit()
     }
-
-    // if after
-    setTimeout(() => {
-        logger.error('Could not close connections in time, forcefully shutting down')
-        process.exit()
-    }, 10 * 1000)
 }
 // listen for TERM signal .e.g. kill
 process.once('SIGTERM', gracefulShutdown)
