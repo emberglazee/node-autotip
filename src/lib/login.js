@@ -15,7 +15,7 @@ const Session = require('./session')
 const { getTipCount } = require('./tracker')
 
 const headers = {
-    'User-Agent': `node-autotip@${packageJson.version}`
+    'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
 }
 
 /**
