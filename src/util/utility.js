@@ -1,11 +1,27 @@
+/**
+ * Get a random integer between two values
+ * @param {number} min The minimum value
+ * @param {number} max The maximum value
+ * @returns {number} A random integer
+ */
 function getRndInteger(min, max) {
     return Math.floor(Math.random() * ((max - min) + 1)) + min
 }
 
+/**
+ * The Mojang API requires UUIDs to be sent without dashes.
+ * @param {string} string The string to remove dashes from
+ * @returns {string} The string without dashes
+ */
 function removeDashes(string) {
     return string.replace(/-/g, '')
 }
 
+/**
+ * Converts Minecraft-style color codes to ANSI escape codes for console output.
+ * @param {string} [src=''] The string to convert
+ * @returns {string} The converted string
+ */
 function toANSI(src = '') {
     const codes = {
         '§0': '\u001b[30m',
@@ -38,6 +54,11 @@ function toANSI(src = '') {
     return message
 }
 
+/**
+ * Removes ANSI formatting from a string, so that it can be written to a log file.
+ * @param {string} string The string to remove ANSI formatting from
+ * @returns {string} The string without ANSI formatting
+ */
 function removeANSIFormatting(string) {
     return string.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
 }

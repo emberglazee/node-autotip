@@ -1,5 +1,11 @@
 const crypto = require('crypto')
 
+/**
+ * The Minecraft session server uses a custom hex digest format that includes
+ * negative hashes. This function performs two's compliment on a buffer to
+ * replicate that behavior.
+ * @param {Buffer} buffer The buffer to perform two's compliment on
+ */
 function performTwosCompliment(buffer) {
     let carry = true
     let i
@@ -17,6 +23,11 @@ function performTwosCompliment(buffer) {
     }
 }
 
+/**
+ * Creates a Minecraft-style hex digest for authenticating with the session server.
+ * @param {string} str The string to digest
+ * @returns {string} The hex digest
+ */
 function mcHexDigest(str) {
     const hash = Buffer.from(crypto.createHash('sha1').update(str).digest(), 'binary')
     // check for negative hashes

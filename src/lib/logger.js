@@ -1,3 +1,8 @@
+/**
+ * @fileoverview This file configures the logger for the application.
+ * @module lib/logger
+ */
+
 const {
     addColors, createLogger, format, transports
 } = require('winston')

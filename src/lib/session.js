@@ -7,7 +7,15 @@ const headers = {
     'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
 }
 
+/**
+ * @class Session
+ * @description Manages the connection to the autotip server, by sending keep-alive
+ * requests and fetching players to tip.
+ */
 class Session {
+    /**
+     * @param {object} obj The session object from the autotip server
+     */
     constructor(obj) {
         this.json = obj
 
@@ -20,6 +28,10 @@ class Session {
         this.tipWave = setInterval(() => this.sendTipRequest(), this.tipWaveRate * 1000)
     }
 
+    /**
+     * @description Sends a keep-alive request to the autotip server to prevent the
+     * session from expiring.
+     */
     async sendKeepAlive() {
         const key = this.sessionKey
         try {
@@ -30,6 +42,11 @@ class Session {
         }
     }
 
+    /**
+     * @description Gets a list of players to tip from the autotip server.
+     * @param {string[]} [games=[]] An array of games to tip in. If empty, players
+     * from any game will be returned.
+     */
     async sendTipRequest(games = []) {
         const key = this.sessionKey
         try {
@@ -47,6 +64,9 @@ class Session {
         }
     }
 
+    /**
+     * @description Logs out of the autotip session to gracefully close the connection.
+     */
     async logOut() {
         try {
             const res = await axios.get(`https://autotip.sk1er.club/logout?key=${this.sessionKey}`, { headers })

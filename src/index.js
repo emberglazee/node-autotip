@@ -1,4 +1,9 @@
 
+/**
+ * @fileoverview This is the main file for node-autotip. It creates the
+ * Mineflayer bot, connects to the server, and handles chat messages.
+ * @module index
+ */
 const mineflayer = require('mineflayer')
 const wait = require('util').promisify(setTimeout)
 const config = require('../config')
@@ -20,21 +25,39 @@ const options = {
     password: credentials.password
 }
 
+/**
+ * Gets the UUID of the bot.
+ * @returns {string} The UUID of the bot
+ */
 function getUUID() {
     return bot._client.session.selectedProfile.id
 }
 
+/**
+ * Sets the language of the bot.
+ * @param {string} [language='english'] The language to set
+ */
 function setLang(language = 'english') {
     logger.info(`Changing language to ${language}`)
     bot.chat(`/lang ${language}`)
 }
 
+/**
+ * When a player is tipped, the details of the tip are hidden in the hover data
+ * of the message. This function extracts that data.
+ * @param {object} message The message to get the hover data from
+ * @returns {string[]} The hover data
+ */
 function getHoverData(message) {
     const arr = message.hoverEvent.value.text.split('\n')
     arr.shift()
     return arr
 }
 
+/**
+ * Logs the rewards from a tip to the console, if enabled in the config.
+ * @param {string[]} [arr=[]] The array of rewards
+ */
 function logRewards(arr = []) {
     if (config.PRINT_REWARDS) {
         arr.forEach(line => {
@@ -43,6 +66,11 @@ function logRewards(arr = []) {
     }
 }
 
+/**
+ * Logs chat messages to the console, with the option to hide certain messages
+ * to reduce spam.
+ * @param {object} message The message to log
+ */
 function chatLogger(message) {
     const str = message.toString()
     const ansi = message.toAnsi()
@@ -68,10 +96,12 @@ function chatLogger(message) {
         }
     }
     if (config.HIDE_WATCHDOG_MESSAGES) {
-        if (/^\[WATCHDOG ANNOUNCEMENT]$/.test(str) ||
-      /^Watchdog has banned [0-9,]+ players in the last 7 days\.$/.test(str) ||
-      /^Staff have banned an additional [0-9,]+ in the last 7 days\.$/.test(str) ||
-      /^Blacklisted modifications are a bannable offense!$/.test(str) || str === '') {
+        if (
+            /^\[WATCHDOG ANNOUNCEMENT]$/.test(str) ||
+            /^Watchdog has banned [0-9,]+ players in the last 7 days\.$/.test(str) ||
+            /^Staff have banned an additional [0-9,]+ in the last 7 days\.$/.test(str) ||
+            /^Blacklisted modifications are a bannable offense!$/.test(str) || str === ''
+        ) {
             logger.debug(ansi)
             return
         }
@@ -79,6 +109,10 @@ function chatLogger(message) {
     logger.game(ansi)
 }
 
+/**
+ * This function is called when the bot logs in. It sets the UUID, changes the
+ * language, displays lifetime stats, and initializes the autotip session.
+ */
 async function onLogin() {
     uuid = getUUID(bot)
     setLang()
@@ -94,6 +128,12 @@ async function onLogin() {
     tipper.initTipper(bot, autotipSession)
 }
 
+/**
+ * This function is called when a chat message is received. It parses the message
+ * and, if it is a tip message, it updates the stats and logs the rewards.
+ * @param {object} message The message object
+ * @param {string} position The position of the message
+ */
 function onMessage(message, position) {
     if (position !== 'chat') return
     const msg = message.toString()
@@ -127,6 +167,9 @@ function onMessage(message, position) {
     }
 }
 
+/**
+ * Initializes the bot and sets up event listeners.
+ */
 (function init() {
     bot = mineflayer.createBot(options)
     bot._client.once('session', session => options.session = session)
@@ -138,6 +181,11 @@ function onMessage(message, position) {
     bot.once('end', () => setTimeout(init, 10000))
 }())
 
+/**
+ * Gracefully shuts down the bot when a kill signal is received. This is to
+ * ensure that the autotip session is logged out and the language is changed
+ * back to the user's preferred language.
+ */
 async function gracefulShutdown() {
     logger.info('Received kill signal, shutting down gracefully.')
     // Change language to a preferred one. Need to leave limbo first to run the command.
