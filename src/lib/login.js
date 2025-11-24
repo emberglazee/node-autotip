@@ -7,15 +7,11 @@
 import axios from 'axios'
 import os from 'os'
 import bigInt from 'big-integer'
-import { removeDashes, packageVersion } from '../util/utility.js'
+import { removeDashes, headers } from '../util/utility.js'
 import logger from './logger.js'
 import createHash from '../util/createHash.js'
 import Session from './session.js'
 import { getTipCount } from './tracker.js'
-
-const headers = {
-    'User-Agent': `@emberglazee/node-autotip@${packageVersion}`
-}
 
 /**
  * Generates a server hash for authentication with Mojang's session server.

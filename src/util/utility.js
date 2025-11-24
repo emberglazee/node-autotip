@@ -68,4 +68,6 @@ export function removeANSIFormatting(string) {
 
 export const sleep = promisify(setTimeout)
 
-export const packageVersion = packageJson.version
+export const headers = {
+    'User-Agent': `@emberglazee/node-autotip@${packageJson.version}`
+}
