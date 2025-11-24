@@ -7,96 +7,102 @@
  */
 import logger from './logger.js'
 
-let tipQueue = [], failQueue = []
-let lastGame, session, bot
-let tippingInProgress = false
-
-/**
- * Gets the command to send to the server to tip a player.
- * @param {object} newTip The tip to send
- * @returns {string} The command to send
- */
-function getCommand(newTip) {
-    if (newTip.gamemode !== 'all') {
-        return `/tip ${newTip.username} ${newTip.gamemode}`
-    }
-    return '/tipall'
-}
-
-/**
- * If the tip queue is empty, this function checks for failed tips and requests
- * new players for those games. This is to ensure that all active boosters are
- * tipped.
- */
-function checkFailedTips() {
-    if (tipQueue.length === 0 && failQueue.length > 0) {
-        logger.debug(`Found failed tips in ${failQueue}, requesting new players...`)
-        session.sendTipRequest(failQueue)
-        failQueue = []
-    }
-}
-
-/**
- * Tips players in the queue at a regular interval.
- */
-function tip() {
-    if (tippingInProgress) return
-    if (tipQueue.length === 0) {
-        checkFailedTips()
-        return
+class Tipper {
+    constructor() {
+        this.tipQueue = []
+        this.failQueue = []
+        this.lastGame = undefined
+        this.session = undefined
+        this.bot = undefined
+        this.tippingInProgress = false
     }
 
-    tippingInProgress = true
+    /**
+     * Gets the command to send to the server to tip a player.
+     * @param {object} newTip The tip to send
+     * @returns {string} The command to send
+     * @private
+     */
+    _getCommand(newTip) {
+        if (newTip.gamemode !== 'all') {
+            return `/tip ${newTip.username} ${newTip.gamemode}`
+        }
+        return '/tipall'
+    }
 
-    function doTip() {
-        if (tipQueue.length === 0) {
-            tippingInProgress = false
-            checkFailedTips()
+    /**
+     * If the tip queue is empty, this function checks for failed tips and requests
+     * new players for those games. This is to ensure that all active boosters are
+     * tipped.
+     * @private
+     */
+    _checkFailedTips() {
+        if (this.tipQueue.length === 0 && this.failQueue.length > 0) {
+            logger.debug(`Found failed tips in ${this.failQueue}, requesting new players...`)
+            this.session.sendTipRequest(this.failQueue)
+            this.failQueue = []
+        }
+    }
+
+    /**
+     * Tips players in the queue at a regular interval.
+     * @private
+     */
+    _tip() {
+        if (this.tippingInProgress) return
+        if (this.tipQueue.length === 0) {
+            this._checkFailedTips()
             return
         }
 
-        const newTip = tipQueue.shift()
-        lastGame = newTip.gamemode
+        this.tippingInProgress = true
 
-        const command = getCommand(newTip)
-        logger.debug(command)
-        bot.chat(command)
-        setTimeout(doTip, session.tipCycleRate * 1000)
+        const doTip = () => {
+            if (this.tipQueue.length === 0) {
+                this.tippingInProgress = false
+                this._checkFailedTips()
+                return
+            }
+
+            const newTip = this.tipQueue.shift()
+            this.lastGame = newTip.gamemode
+
+            const command = this._getCommand(newTip)
+            logger.debug(command)
+            this.bot.chat(command)
+            setTimeout(doTip, this.session.tipCycleRate * 1000)
+        }
+        doTip()
     }
-    doTip()
+
+    /**
+     * Updates the tip queue with new players to tip.
+     * @param {object[]} tips The tips to add to the queue
+     */
+    updateQueue(tips) {
+        this.tipQueue = tips
+        this._tip()
+    }
+
+    /**
+     * If a tip fails, this function adds the game to the fail queue so that it can
+     * be retried later.
+     */
+    tipFailed() {
+        this.failQueue.push(this.lastGame)
+    }
+
+    /**
+     * Initializes the tipper by setting the bot and session, and sending the first
+     * tip request.
+     * @param {object} _bot The mineflayer bot
+     * @param {object} autotipSession The autotip session
+     */
+    initTipper(_bot, autotipSession) {
+        this.session = autotipSession
+        this.bot = _bot
+        this.session.sendTipRequest()
+    }
 }
 
-/**
- * Updates the tip queue with new players to tip.
- * @param {object[]} tips The tips to add to the queue
- */
-function updateQueue(tips) {
-    tipQueue = tips
-    tip()
-}
-
-/**
- * If a tip fails, this function adds the game to the fail queue so that it can
- * be retried later.
- */
-function tipFailed() {
-    failQueue.push(lastGame)
-}
-
-/**
- * Initializes the tipper by setting the bot and session, and sending the first
- * tip request.
- * @param {object} _bot The mineflayer bot
- * @param {object} autotipSession The autotip session
- */
-function initTipper(_bot, autotipSession) {
-    session = autotipSession
-    bot = _bot
-    session.sendTipRequest()
-}
-
-export default {
-    updateQueue,
-    tipFailed,
-    initTipper
-}
+export default new Tipper()
