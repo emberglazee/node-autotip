@@ -1,6 +1,6 @@
 <img src="https://repository-images.githubusercontent.com/124889265/21280080-7431-11e9-92d0-2a2eefcc1051" alt="node-autotip"/>
 
-# node-autotip v4.5.0
+# node-autotip v4.6.0
 
 A fork of [builder-247](https://github.com/builder-247)'s [node-autotip](https://github.com/builder-247/node-autotip) project, with updated packages and a refactored code base.
 

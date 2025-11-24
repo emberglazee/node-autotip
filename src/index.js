@@ -16,6 +16,25 @@ import jsonfile from 'jsonfile'
 import fs from 'fs/promises'
 import path from 'path'
 
+const regex = {
+    chat: {
+        friendGuild: /(^Friend|Guild) > [\w]+ (left|joined)\.$/,
+        mvpJoin: /^\[MVP\++\]\s\S+\sjoined the lobby!$/,
+        mvpJoinAlt: /^\s*>>> \[MVP\++\]\s\S+\sjoined the lobby! <<<\s*$/
+    },
+    watchdog: {
+        announcement: /^\[WATCHDOG ANNOUNCEMENT\]$/,
+        banned: /^Watchdog has banned [0-9,]+ players in the last 7 days\.$/,
+        staffBanned: /^Staff have banned an additional [0-9,]+ in the last 7 days\.$/,
+        blacklist: /^Blacklisted modifications are a bannable offense!$/
+    },
+    tipping: {
+        cooldown: /You've already tipped someone in the past hour in [\w\s]*! Wait a bit and try again!/,
+        tipped: /tipped [\w]* players in (\d*)/,
+        tippedBy: /by (\d*) players?/
+    }
+}
+
 logger.info('Starting...')
 // Check for a Bun version first, since it fakes a Node.js version
 if (process.versions.bun) {
@@ -144,7 +163,7 @@ function logRewards(arr = []) {
 function chatLogger(message) {
     const str = message.toString()
     const ansi = message.toAnsi()
-    const regex = /You've already tipped someone in the past hour in [\w\s]*! Wait a bit and try again!/
+
     const blacklist = [
         'A kick occurred in your connection, so you have been routed to limbo!',
         'Illegal characters in chat',
@@ -155,29 +174,29 @@ function chatLogger(message) {
         'You are AFK. Move around to return from AFK.'
     ]
     if (config.HIDE_TIP_MESSAGES) {
-        if (blacklist.includes(str) || regex.test(str)) {
+        if (blacklist.includes(str) || regex.tipping.cooldown.test(str)) {
             logger.debug(ansi)
             return
         }
     }
     if (config.HIDE_JOIN_MESSAGES) {
-        if (/(^Friend|Guild) > [\w]+ (left|joined)\.$/.test(str)) {
+        if (regex.chat.friendGuild.test(str)) {
             logger.debug(ansi)
             return
         }
     }
     if (config.HIDE_MVP_JOIN_MESSAGES) {
-        if (/^\[MVP\++]\s\S+\sjoined the lobby!$/.test(str) || /^\s*>>> \[MVP\++]\s\S+\sjoined the lobby! <<<\s*$/.test(str)) {
+        if (regex.chat.mvpJoin.test(str) || regex.chat.mvpJoinAlt.test(str)) {
             logger.debug(ansi)
             return
         }
     }
     if (config.HIDE_WATCHDOG_MESSAGES) {
         if (
-            /^\[WATCHDOG ANNOUNCEMENT]$/.test(str) ||
-            /^Watchdog has banned [0-9,]+ players in the last 7 days\.$/.test(str) ||
-            /^Staff have banned an additional [0-9,]+ in the last 7 days\.$/.test(str) ||
-            /^Blacklisted modifications are a bannable offense!$/.test(str) || str === ''
+            regex.watchdog.announcement.test(str) ||
+            regex.watchdog.banned.test(str) ||
+            regex.watchdog.staffBanned.test(str) ||
+            regex.watchdog.blacklist.test(str) || str === ''
         ) {
             logger.debug(ansi)
             return
@@ -221,8 +240,8 @@ function onMessage(message, position) {
 
     if (msg.startsWith('You tipped')) {
         const arr = getHoverData(message)
-        const tips = (/tipped \w* players in (\d*)/.exec(msg) !== null)
-            ? /tipped \w* players in (\d*)/.exec(msg)[1]
+        const tips = (regex.tipping.tipped.exec(msg) !== null)
+            ? regex.tipping.tipped.exec(msg)[1]
             : 1
         const karma = (tips > 1 && arr.some(line => line.includes('Quakecraft')))
             ? (tips - 5) * config.TIP_KARMA
@@ -235,7 +254,7 @@ function onMessage(message, position) {
     if (msg.startsWith('You were tipped')) {
         const arr = getHoverData(message)
         try {
-            const tips = /by (\d*) players?/.exec(msg)[1]
+            const tips = regex.tipping.tippedBy.exec(msg)[1]
             tipIncrement(uuid, credentials.username, { type: 'received', amount: tips }, arr)
         } catch (e) {
             //
