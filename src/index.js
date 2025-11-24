@@ -253,24 +253,53 @@ function onMessage(message, position) {
 /**
  * Initializes the bot and sets up event listeners.
  */
-(function init() {
+function init() {
+    if (bot) bot.removeAllListeners()
+
     bot = mineflayer.createBot(options)
     logger.info('Logging in...')
 
-    bot._client.once('session', session => options.session = session)
+    bot.on('error', err => logger.error('A bot error occurred:', err))
+    bot._client.once('session', session => { options.session = session })
     bot.once('login', onLogin)
     bot.on('message', onMessage)
     bot.on('kicked', reason => {
         logger.info(`Kicked! ${reason}`)
     })
-    bot.once('end', () => setTimeout(init, 10000))
-}())
+    bot.once('end', reason => {
+        logger.info(`Bot connection ended. Reason: ${reason || 'unknown'}. Restarting in 10 seconds...`)
+        if (autotipSession) {
+            autotipSession.logOut()
+            autotipSession = undefined
+        }
+        setTimeout(init, 10000)
+    })
+}
+init()
 
 /**
  * Gracefully shuts down the bot when a kill signal is received. This is to
  * ensure that the autotip session is logged out and the language is changed
  * back to the user's preferred language.
  */
+function handleError(error, type) {
+    logger.error(`A ${type} occurred:`, error)
+    logger.info('Attempting to gracefully restart...')
+    if (bot && bot.end) {
+        bot.end(type)
+    } else {
+        logger.warn('Bot could not be ended gracefully. Restarting manually.')
+        if (autotipSession) {
+            autotipSession.logOut()
+            autotipSession = undefined
+        }
+        setTimeout(init, 10000)
+    }
+}
+
+process.on('uncaughtException', err => handleError(err, 'uncaught exception'))
+process.on('unhandledRejection', reason => handleError(reason, 'unhandled rejection'))
+
 async function gracefulShutdown() {
     logger.info('Received kill signal, shutting down gracefully.')
 

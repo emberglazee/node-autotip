@@ -69,6 +69,8 @@ class Session {
      * @description Logs out of the autotip session to gracefully close the connection.
      */
     async logOut() {
+        clearInterval(this.keepAlive)
+        clearInterval(this.tipWave)
         try {
             const res = await axios.get(`https://autotip.sk1er.club/logout?key=${this.sessionKey}`, { headers })
             logger.debug(`Autotip logout: ${res.data}`)
