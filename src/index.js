@@ -15,6 +15,7 @@ import credentials from '../credentials.json' with { type: 'json' }
 import jsonfile from 'jsonfile'
 import fs from 'fs/promises'
 import path from 'path'
+import axios from 'axios'
 
 const regex = {
     chat: {
@@ -102,7 +103,7 @@ if (process.argv.includes('--stats')) {
     showStats().then(() => process.exit(0))
 }
 
-let bot, uuid, autotipSession
+let bot, uuid, autotipSession, pollingInterval, pauseReconnect = false, isFirstLogin = true
 
 const options = {
     host: 'mc.hypixel.net',
@@ -111,6 +112,60 @@ const options = {
     auth: credentials.legacy ? 'mojang' : 'microsoft',
     username: credentials.username,
     password: credentials.password
+}
+
+/**
+ * Gets the UUID for a given username from Mojang's API.
+ * @param {string} username The username to get the UUID for.
+ * @returns {Promise<string|null>} The UUID of the player, or null if not found.
+ */
+async function getPlayerUUID(username) {
+    try {
+        const response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`)
+        if (response.data && response.data.id) {
+            return response.data.id
+        }
+        logger.warn(`Could not find UUID for username ${username}.`)
+        return null
+    } catch (error) {
+        if (error.response && error.response.status === 404) {
+            logger.error(`No user with the name "${username}" was found.`)
+        } else {
+            logger.error(`Error fetching UUID for ${username}:`, error)
+        }
+        return null
+    }
+}
+
+/**
+ * Checks if the player is online on Hypixel.
+ * @param {string} playerUUID The UUID of the player to check.
+ * @returns {Promise<boolean|null>} True if online, false if offline, null on error or no key.
+ */
+async function checkPlayerOnline(playerUUID) {
+    if (!credentials.apiKey || credentials.apiKey === 'your-hypixel-api-key' || credentials.apiKey.trim() === '') {
+        logger.debug('No valid Hypixel API key found, skipping online status check.')
+        return null
+    }
+
+    try {
+        const res = await axios.get(`https://api.hypixel.net/v2/status?uuid=${playerUUID}`, {
+            headers: { 'API-Key': credentials.apiKey }
+        })
+
+        if (res.data.success) {
+            return res.data.session.online
+        }
+        logger.warn('Hypixel API request for player status was not successful.')
+        return false // assume offline
+    } catch (error) {
+        if (error.response && error.response.status === 403) {
+            logger.error('Invalid Hypixel API key. Unable to check player status.')
+        } else {
+            logger.error('Error checking player status:', error)
+        }
+        return null // don't block on error
+    }
 }
 
 /**
@@ -272,8 +327,56 @@ function onMessage(message, position) {
 /**
  * Initializes the bot and sets up event listeners.
  */
-function init() {
+function startPollingForPlayerStatus() {
+    if (pollingInterval) clearInterval(pollingInterval)
+
+    const checkStatus = async () => {
+        logger.debug('Checking player status...')
+        try {
+            const res = await axios.get(`https://api.hypixel.net/v2/status?uuid=${uuid}`, {
+                headers: { 'API-Key': credentials.apiKey }
+            })
+
+            if (res.data.success && res.data.session.online === false) {
+                logger.info('Player is now offline. Restarting bot.')
+                clearInterval(pollingInterval)
+                pollingInterval = null
+                init()
+            } else {
+                logger.debug('Player is still online.')
+            }
+        } catch (error) {
+            logger.error('Error checking player status:', error)
+        }
+    }
+
+    // Check immediately, then every 5 minutes
+    checkStatus()
+    pollingInterval = setInterval(checkStatus, 5 * 60 * 1000)
+}
+
+async function init() {
+    if (isFirstLogin) {
+        isFirstLogin = false
+        const playerUUID = await getPlayerUUID(credentials.username)
+        if (playerUUID) {
+            let isOnline = await checkPlayerOnline(playerUUID)
+            if (isOnline === true) {
+                logger.info('Player is currently online on Hypixel. Waiting for them to log off before starting the bot...')
+                while (isOnline) {
+                    await sleep(5 * 60 * 1000) // 5 minutes
+                    isOnline = await checkPlayerOnline(playerUUID)
+                    if (isOnline) {
+                        logger.debug('Player is still online. Waiting...')
+                    }
+                }
+                logger.info('Player is now offline. Starting bot.')
+            }
+        }
+    }
+
     if (bot) bot.removeAllListeners()
+    pauseReconnect = false
 
     bot = mineflayer.createBot(options)
     logger.info('Logging in...')
@@ -284,14 +387,34 @@ function init() {
     bot.on('message', onMessage)
     bot.on('kicked', reason => {
         logger.info(`Kicked! ${reason}`)
+        try {
+            const reasonJson = JSON.parse(reason)
+            if (reasonJson.extra && reasonJson.extra[0].text === 'You logged in from another location!') {
+                if (!credentials.apiKey || credentials.apiKey.trim() === 'your-hypixel-api-key') {
+                    logger.warn('Got kicked for another login, but no apiKey found in credentials.json. Will use default reconnect logic.')
+                    return
+                }
+                logger.info('Logged in from another location. Pausing bot and checking for player status every 5 minutes.')
+                pauseReconnect = true
+            }
+        } catch {
+            // Not JSON, ignore
+        }
     })
     bot.once('end', reason => {
-        logger.info(`Bot connection ended. Reason: ${reason || 'unknown'}. Restarting in 10 seconds...`)
+        logger.info(`Bot connection ended. Reason: ${reason || 'unknown'}.`)
         if (autotipSession) {
             autotipSession.logOut()
             autotipSession = undefined
         }
-        setTimeout(init, 10000)
+
+        if (pauseReconnect) {
+            logger.info('Polling for player status.')
+            startPollingForPlayerStatus()
+        } else {
+            logger.info('Restarting in 10 seconds...')
+            setTimeout(init, 10000)
+        }
     })
 }
 init()
