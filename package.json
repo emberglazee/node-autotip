@@ -1,6 +1,6 @@
 {
   "name": "@emberglazee/node-autotip",
-  "version": "4.7.0",
+  "version": "4.7.1",
   "description": "CLI-based autotip client for Hypixel using mineflayer.",
   "author": "emberglazee",
   "license": "MIT",

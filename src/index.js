@@ -20,8 +20,8 @@ import axios from 'axios'
 const regex = {
     chat: {
         friendGuild: /(^Friend|Guild) > [\w]+ (left|joined)\.$/,
-        mvpJoin: /^\[MVP\++\]\s\S+\sjoined the lobby!$/,
-        mvpJoinAlt: /^\s*>>> \[MVP\++\]\s\S+\sjoined the lobby! <<<\s*$/
+        mvpJoin: /^\[MVP\++\]\s\S+\s(joined|slid into) the lobby!$/,
+        mvpJoinAlt: /^\s*>>> \[MVP\++\]\s\S+\s(joined|slid into) the lobby! <<<\s*$/
     },
     watchdog: {
         announcement: /^\[WATCHDOG ANNOUNCEMENT\]$/,
